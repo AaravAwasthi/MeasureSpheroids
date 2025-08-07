@@ -1,0 +1,130 @@
+import streamlit as st
+import cv2
+import numpy as np
+import pandas as pd
+from io import BytesIO
+from PIL import Image
+
+# Parameters
+
+pixelsPerMicron = 430.4 / 1000.0  # 430.4 pixels = 1000 microns
+blurKernelSize = (9, 9)
+blurSigma = 2
+dp = 1.2
+minDist = 50
+edgeThreshold = 50
+circleThreshold = 30
+minRadius = 10
+maxRadius = 100
+
+# Functions
+
+def loadImage(file) -> np.ndarray:
+    file_bytes = np.asarray(bytearray(file.read()), dtype=np.uint8)
+    img = cv2.imdecode(file_bytes, cv2.IMREAD_GRAYSCALE)
+    return img
+
+def detectFullCircles(blurredImg, originalImgShape, pixelsPerMicron):
+    circles = cv2.HoughCircles(
+        blurredImg,
+        cv2.HOUGH_GRADIENT,
+        dp=dp,
+        minDist=minDist,
+        param1=edgeThreshold,
+        param2=circleThreshold,
+        minRadius=minRadius,
+        maxRadius=maxRadius
+    )
+
+    circleData = []
+    height, width = originalImgShape
+
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        for idx, (x, y, r) in enumerate(circles, start=1):
+            if x - r >= 0 and x + r <= width and y - r >= 0 and y + r <= height:
+                diameterPixels = 2 * r
+                diameterMicrons = diameterPixels / pixelsPerMicron
+                circleData.append({
+                    "circleID": f"#{idx}",
+                    "xCenter": x,
+                    "yCenter": y,
+                    "diameterPixels": diameterPixels,
+                    "diameterMicrons": diameterMicrons
+                })
+
+    return circleData
+
+def drawCircles(originalImg, circleData):
+    imgColor = cv2.cvtColor(originalImg, cv2.COLOR_GRAY2BGR)
+
+    for circle in circleData:
+        x = circle["xCenter"]
+        y = circle["yCenter"]
+        radius = int(circle["diameterPixels"] / 2)
+        diameterMicrons = circle["diameterMicrons"]
+        circleID = circle["circleID"]
+
+        # Circle
+        cv2.circle(imgColor, (x, y), radius, (0, 255, 0), 2)
+        # Center point
+        cv2.circle(imgColor, (x, y), 2, (0, 0, 255), 3)
+        # Diameter line
+        pt1 = (x - radius, y)
+        pt2 = (x + radius, y)
+        cv2.line(imgColor, pt1, pt2, (255, 0, 0), 2)
+        # Add label text
+        label = f"{circleID}: {diameterMicrons:.1f} µm"
+        cv2.putText(imgColor, label, (x - radius, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+    return imgColor
+
+def convertToCsv(circleData):
+    df = pd.DataFrame(circleData)
+    avg = df["diameterMicrons"].mean()
+    df = pd.concat([df, pd.DataFrame([{}, {
+        "circleID": "Average",
+        "diameterMicrons": f"{avg:.2f}"
+    }])], ignore_index=True)
+    return df
+
+def convertCv2ImageToDownloadable(image):
+    rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    pil_img = Image.fromarray(rgb)
+    buffer = BytesIO()
+    pil_img.save(buffer, format="PNG")
+    buffer.seek(0)
+    return buffer
+
+# Streamlit App
+st.title("Circle Diameter Detector")
+
+uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
+
+if uploadedFile:
+    imgGray = loadImage(uploadedFile)
+    st.image(imgGray, caption="Original Image", channels="GRAY", use_column_width=True)
+
+    blurred = cv2.GaussianBlur(imgGray, blurKernelSize, blurSigma)
+    circleData = detectFullCircles(blurred, imgGray.shape, pixelsPerMicron)
+
+    if not circleData:
+        st.warning("No full circles detected.")
+    else:
+        df = convertToCsv(circleData)
+        st.subheader("Circle Measurements")
+        st.dataframe(df)
+
+        processedImg = drawCircles(imgGray, circleData)
+        st.image(processedImg, caption="Processed Image with Detected Circles", use_column_width=True)
+
+        # Downloadable CSV
+        csvBuffer = BytesIO()
+        df.to_csv(csvBuffer, index=False)
+        csvBuffer.seek(0)
+        st.download_button("Download CSV", data=csvBuffer, file_name="circleDiameters.csv", mime="text/csv")
+
+        # Downloadable image
+        imgBuffer = convertCv2ImageToDownloadable(processedImg)
+        st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
