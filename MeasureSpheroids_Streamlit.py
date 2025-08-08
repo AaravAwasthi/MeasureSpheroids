@@ -75,7 +75,7 @@ def drawCircles(originalImg, circleData):
         # Add label text
         label = f"{circleID}"
         cv2.putText(imgColor, label, (x - radius, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 1)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 1)
 
     return imgColor
 
@@ -158,6 +158,7 @@ if uploadedFile:
     st.download_button("Download CSV", data=csvBuffer, file_name="circleDiameters.csv", mime="text/csv")
     imgBuffer = convertCv2ImageToDownloadable(processedImg)
     st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
