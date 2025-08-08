@@ -10,10 +10,10 @@ from PIL import Image
 blurKernelSize = (9, 9)
 blurSigma = 1
 dp = 1
-minDist = 50
+minDist = 100
 edgeThreshold = 40
 circleThreshold = 20
-minRadius = 10
+minRadius = 20
 maxRadius = 150
 
 # Functions
@@ -140,6 +140,7 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
