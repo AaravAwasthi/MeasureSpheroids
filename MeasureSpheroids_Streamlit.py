@@ -128,6 +128,11 @@ if uploadedFile:
         st.subheader("Spheroid Measurements")
         df = df.fillna(" ")
         st.dataframe(df, hide_index=True)
+        selectable_df = df[df["circleID"] != "Average"]
+        deletable_ids = st.multiselect("Select circles to delete", options=selectable_df["circleID"].tolist())
+        df = df[~df["circleID"].isin(deletable_ids)]
+
+st.dataframe(df, hide_index=True)
 
         processedImg = drawCircles(imgGray, circleData)
         st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
@@ -141,6 +146,7 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
