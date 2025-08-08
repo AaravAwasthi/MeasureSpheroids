@@ -110,30 +110,9 @@ pixelsPerMicron_input = st.text_input(
     help="How many pixels represent 1 micron. This is used to convert pixel measurements to real-world units."
 )
 
-minDist_input = st.text_input(
-    "Minimum Distance Between Circles (pixels)", 
-    placeholder="e.g. 50", 
-    help="Minimum number of pixels between detected circle centers. Helps prevent overlapping detections."
-)
-
-minRadius_input = st.text_input(
-    "Minimum Radius (pixels)", 
-    placeholder="e.g. 10", 
-    help="Minimum size of a detected circle. Helps ignore tiny artifacts or noise."
-)
-
-maxRadius_input = st.text_input(
-    "Maximum Radius (pixels)", 
-    placeholder="e.g. 150", 
-    help="Maximum size of a detected circle. Helps avoid merging of large objects or selecting outer edges."
-)
-
 # Apply defaults if inputs are left blank
 try:
     pixelsPerMicron = float(pixelsPerMicron_input) if pixelsPerMicron_input else 430.4 / 1000.0
-    minDist = int(minDist_input) if minDist_input else 50
-    minRadius = int(minRadius_input) if minRadius_input else 10
-    maxRadius = int(maxRadius_input) if maxRadius_input else 150
 except ValueError:
     st.error("Please enter valid numeric values for the parameters.")
     st.stop()
@@ -166,4 +145,3 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
-
