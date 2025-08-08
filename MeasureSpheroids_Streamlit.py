@@ -124,26 +124,26 @@ if uploadedFile:
     if not circleData:
         st.warning("No full circles detected.")
     else:
-st.subheader("Spheroid Measurements")
-df = pd.DataFrame(circleData)
-df = df.fillna(" ")
-deletable_ids = st.multiselect(
-    "Select circles to delete", 
-    options=df["circleID"].tolist(),
-    help="Choose the IDs of circles you'd like to remove from the table and average."
-)
-df = df[~df["circleID"].isin(deletable_ids)]
-if not df.empty:
-    avg = df["diameterMicrons"].mean()
-    avg_row = pd.DataFrame([{
-        "circleID": "Average",
-        "xCenter": "",
-        "yCenter": "",
-        "diameterPixels": "",
-        "diameterMicrons": f"{avg:.2f}"
-    }])
-    df = pd.concat([df, avg_row], ignore_index=True)
-st.dataframe(df, hide_index=True)
+        st.subheader("Spheroid Measurements")
+        df = pd.DataFrame(circleData)
+        df = df.fillna(" ")
+        deletable_ids = st.multiselect(
+            "Select circles to delete", 
+            options=df["circleID"].tolist(),
+            help="Choose the IDs of circles you'd like to remove from the table and average."
+        )
+        df = df[~df["circleID"].isin(deletable_ids)]
+        if not df.empty:
+            avg = df["diameterMicrons"].mean()
+            avg_row = pd.DataFrame([{
+                "circleID": "Average",
+                "xCenter": "",
+                "yCenter": "",
+                "diameterPixels": "",
+                "diameterMicrons": f"{avg:.2f}"
+            }])
+            df = pd.concat([df, avg_row], ignore_index=True)
+        st.dataframe(df, hide_index=True)
         
         
 
@@ -159,6 +159,7 @@ st.dataframe(df, hide_index=True)
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
