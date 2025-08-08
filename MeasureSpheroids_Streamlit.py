@@ -7,15 +7,13 @@ from PIL import Image
 
 # Parameters
 
-pixelsPerMicron = 430.4 / 1000.0  # 430.4 pixels = 1000 microns
+
 blurKernelSize = (9, 9)
 blurSigma = 2
-dp = 1.2
-minDist = 50
+dp = 1
 edgeThreshold = 50
 circleThreshold = 30
-minRadius = 10
-maxRadius = 100
+
 
 # Functions
 
@@ -74,9 +72,9 @@ def drawCircles(originalImg, circleData):
         pt2 = (x + radius, y)
         cv2.line(imgColor, pt1, pt2, (255, 0, 0), 2)
         # Add label text
-        label = f"{circleID}: {diameterMicrons:.1f} µm"
+        label = f"{circleID}"
         cv2.putText(imgColor, label, (x - radius, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 1)
 
     return imgColor
 
@@ -100,11 +98,53 @@ def convertCv2ImageToDownloadable(image):
 # Streamlit App
 st.title("Circle Diameter Detector")
 
+st.markdown("### 🔧 Parameter Settings")
+st.markdown("_Modify the detection parameters below. Defaults will be used if left blank._")
+
+# User Inputs
+pixelsPerMicron_input = st.text_input(
+    "Scale (Pixels per Micron)", 
+    placeholder="e.g. 0.4304", 
+    help="How many pixels represent 1 micron. This is used to convert pixel measurements to real-world units."
+)
+try:
+    pixelsPerMicron = float(pixelsPerMicron_input) if pixelsPerMicron_input else 430.4 / 1000.0
+except ValueError:
+    st.error("Please enter valid numeric values for the parameters.")
+    st.stop()
+
+minDist_input = st.text_input(
+    "Minimum Distance Between Circles (microns)", 
+    placeholder="e.g. 116", 
+    help="Minimum number of pixels between detected circle centers. Helps prevent overlapping detections."
+)
+
+minRadius_input = st.text_input(
+    "Minimum Radius (microns)", 
+    placeholder="e.g. 23", 
+    help="Minimum size of a detected circle. Helps ignore tiny artifacts or noise."
+)
+
+maxRadius_input = st.text_input(
+    "Maximum Radius (microns)", 
+    placeholder="e.g. 349", 
+    help="Maximum size of a detected circle. Helps avoid merging of large objects or selecting outer edges."
+)
+
+# Apply defaults if inputs are left blank
+try:
+    minDist = float(minDist_input * pixelsPerMicron) if minDist_input else 50
+    minRadius = float(minRadius_input * pixelsPerMicron) if minRadius_input else 10
+    maxRadius = float(maxRadius_input * pixelsPerMicron) if maxRadius_input else 150
+except ValueError:
+    st.error("Please enter valid numeric values for the parameters.")
+    st.stop()
+
 uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
 
 if uploadedFile:
     imgGray = loadImage(uploadedFile)
-    st.image(imgGray, caption="Original Image", channels="GRAY", use_column_width=True)
+    st.image(imgGray, caption="Original Image", channels="GRAY", use_container_width=True)
 
     blurred = cv2.GaussianBlur(imgGray, blurKernelSize, blurSigma)
     circleData = detectFullCircles(blurred, imgGray.shape, pixelsPerMicron)
@@ -113,11 +153,11 @@ if uploadedFile:
         st.warning("No full circles detected.")
     else:
         df = convertToCsv(circleData)
-        st.subheader("Circle Measurements")
-        st.dataframe(df)
+        st.subheader("Spheroid Measurements")
+        st.dataframe(df, hide_index=True)
 
         processedImg = drawCircles(imgGray, circleData)
-        st.image(processedImg, caption="Processed Image with Detected Circles", use_column_width=True)
+        st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
 
         # Downloadable CSV
         csvBuffer = BytesIO()
