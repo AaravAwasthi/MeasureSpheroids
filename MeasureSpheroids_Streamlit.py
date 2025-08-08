@@ -7,7 +7,6 @@ from PIL import Image
 
 # Parameters
 
-pixelsPerMicron = 430.4 / 1000.0  # 430.4 pixels = 1000 microns
 blurKernelSize = (9, 9)
 blurSigma = 2
 dp = 1.2
@@ -141,6 +140,7 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
