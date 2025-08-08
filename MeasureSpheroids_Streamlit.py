@@ -10,7 +10,7 @@ from PIL import Image
 pixelsPerMicron = 430.4 / 1000.0  # 430.4 pixels = 1000 microns
 blurKernelSize = (9, 9)
 blurSigma = 2
-dp = 1
+dp = 1.2
 minDist = 50
 edgeThreshold = 50
 circleThreshold = 30
@@ -100,11 +100,6 @@ def convertCv2ImageToDownloadable(image):
 # Streamlit App
 st.title("Circle Diameter Detector")
 
-st.markdown("### 🔧 Parameter Settings")
-st.markdown("_Modify the detection parameters below. Defaults will be used if left blank._")
-
-
-
 uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
 
 if uploadedFile:
@@ -119,7 +114,7 @@ if uploadedFile:
     else:
         df = convertToCsv(circleData)
         st.subheader("Spheroid Measurements")
-        st.dataframe(df, hide_index=True)
+        st.dataframe(df)
 
         processedImg = drawCircles(imgGray, circleData)
         st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
@@ -133,4 +128,3 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
-
