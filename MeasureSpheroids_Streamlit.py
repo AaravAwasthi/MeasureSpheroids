@@ -100,8 +100,20 @@ def convertCv2ImageToDownloadable(image):
 # Streamlit App
 st.title("Circle Diameter Detector")
 
-uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
+st.markdown("### 🔧 Parameter Settings")
+st.markdown("_Modify the detection parameters below. Defaults will be used if left blank._")
 
+pixelsPerMicron_input = st.text_input(
+    "Scale (Pixels per Micron)", 
+    placeholder="e.g. 0.4304", 
+    help="How many pixels represent 1 micron. This is used to convert pixel measurements to real-world units."
+)
+if pixelsPerMicron_input
+    pixelsPerMicron = float(pixelsPerMicron_input)
+uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
+else:
+    pixelsPerMicron = 430.4 / 1000.0
+    
 if uploadedFile:
     imgGray = loadImage(uploadedFile)
     st.image(imgGray, caption="Original Image", channels="GRAY", use_container_width=True)
@@ -128,3 +140,4 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
