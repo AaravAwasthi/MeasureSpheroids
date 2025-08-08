@@ -99,65 +99,70 @@ def convertCv2ImageToDownloadable(image):
 # Streamlit App
 st.title("Circle Diameter Detector")
 
-st.markdown("### Parameter Settings")
-st.markdown("_Modify the detection parameters below. Defaults will be used if left blank._")
-
-pixelsPerMicron_input = st.text_input(
-    "Scale (Pixels per Micron)", 
-    placeholder="e.g. 0.4304", 
-    help="How many pixels represent 1 micron. This is used to convert pixel measurements to real-world units."
-)
-if pixelsPerMicron_input:
-    pixelsPerMicron = float(pixelsPerMicron_input)
-
-else:
-    pixelsPerMicron = 430.4 / 1000.0
-
-uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
-if uploadedFile:
-    imgGray = loadImage(uploadedFile)
-
-    blurred = cv2.GaussianBlur(imgGray, blurKernelSize, blurSigma)
-    circleData = detectFullCircles(blurred, imgGray.shape, pixelsPerMicron)
+col1, col2 = st.columns([1, 2])
+with col1:
     
-    processedImg = drawCircles(imgGray, circleData)
-    st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
+    st.markdown("### Parameter Settings")
+    st.markdown("_Modify the detection parameters below. Defaults will be used if left blank._")
     
-    if not circleData:
-        st.warning("No full circles detected.")
+    pixelsPerMicron_input = st.text_input(
+        "Scale (Pixels per Micron)", 
+        placeholder="e.g. 0.4304", 
+        help="How many pixels represent 1 micron. This is used to convert pixel measurements to real-world units."
+    )
+    if pixelsPerMicron_input:
+        pixelsPerMicron = float(pixelsPerMicron_input)
+    
     else:
-        st.subheader("Spheroid Measurements")
-        df = pd.DataFrame(circleData)
-        df = df.fillna(" ")
-        deletable_ids = st.multiselect(
-            "Select circles to delete", 
-            options=df["circleID"].tolist(),
-            help="Choose the IDs of circles you'd like to remove from the table and average."
-        )
-        df = df[~df["circleID"].isin(deletable_ids)]
-        if not df.empty:
-            avg = df["diameterMicrons"].mean()
-            avg_row = pd.DataFrame([{
-                "circleID": "Average",
-                "xCenter": "",
-                "yCenter": "",
-                "diameterPixels": "",
-                "diameterMicrons": f"{avg:.2f}"
-            }])
-            df = pd.concat([df, avg_row], ignore_index=True)
-        st.dataframe(df, hide_index=True)
-        
-        
+        pixelsPerMicron = 430.4 / 1000.0
 
-        # Downloadable CSV
+    uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
+with col2:
+    
+    if uploadedFile:
+        imgGray = loadImage(uploadedFile)
+    
+        blurred = cv2.GaussianBlur(imgGray, blurKernelSize, blurSigma)
+        circleData = detectFullCircles(blurred, imgGray.shape, pixelsPerMicron)
+        
+        processedImg = drawCircles(imgGray, circleData)
+        st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
+        
+        if not circleData:
+            st.warning("No full circles detected.")
+        else:
+            st.subheader("Spheroid Measurements")
+            df = pd.DataFrame(circleData)
+            df = df.fillna(" ")
+            deletable_ids = st.multiselect(
+                "Select circles to delete", 
+                options=df["circleID"].tolist(),
+                help="Choose the IDs of circles you'd like to remove from the table and average."
+            )
+            df = df[~df["circleID"].isin(deletable_ids)]
+            if not df.empty:
+                avg = df["diameterMicrons"].mean()
+                avg_row = pd.DataFrame([{
+                    "circleID": "Average",
+                    "xCenter": "",
+                    "yCenter": "",
+                    "diameterPixels": "",
+                    "diameterMicrons": f"{avg:.2f}"
+                }])
+                df = pd.concat([df, avg_row], ignore_index=True)
+            st.dataframe(df, hide_index=True)
+        
+        
+with col1:
+    if uploadedFile and not df.empty:
+        st.markdown("### Downloads")
         csvBuffer = BytesIO()
         df.to_csv(csvBuffer, index=False)
         csvBuffer.seek(0)
         st.download_button("Download CSV", data=csvBuffer, file_name="circleDiameters.csv", mime="text/csv")
-
-        # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
