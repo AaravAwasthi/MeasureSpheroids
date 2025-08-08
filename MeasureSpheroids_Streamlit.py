@@ -126,7 +126,7 @@ if uploadedFile:
     else:
         df = convertToCsv(circleData)
         st.subheader("Spheroid Measurements")
-        st.dataframe(df)
+        st.dataframe(df, hide_index=True)
 
         processedImg = drawCircles(imgGray, circleData)
         st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
@@ -140,6 +140,7 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
