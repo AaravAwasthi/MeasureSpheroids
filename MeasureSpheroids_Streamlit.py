@@ -103,19 +103,7 @@ st.title("Circle Diameter Detector")
 st.markdown("### 🔧 Parameter Settings")
 st.markdown("_Modify the detection parameters below. Defaults will be used if left blank._")
 
-# User Inputs
-pixelsPerMicron_input = st.text_input(
-    "Scale (Pixels per Micron)", 
-    placeholder="e.g. 0.4304", 
-    help="How many pixels represent 1 micron. This is used to convert pixel measurements to real-world units."
-)
 
-# Apply defaults if inputs are left blank
-try:
-    pixelsPerMicron = float(pixelsPerMicron_input) if pixelsPerMicron_input else 430.4 / 1000.0
-except ValueError:
-    st.error("Please enter valid numeric values for the parameters.")
-    st.stop()
 
 uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
 
@@ -145,3 +133,4 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
