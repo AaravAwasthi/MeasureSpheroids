@@ -99,7 +99,7 @@ def convertCv2ImageToDownloadable(image):
 # Streamlit App
 st.title("Circle Diameter Detector")
 
-st.markdown("### 🔧 Parameter Settings")
+st.markdown("### Parameter Settings")
 st.markdown("_Modify the detection parameters below. Defaults will be used if left blank._")
 
 pixelsPerMicron_input = st.text_input(
@@ -126,6 +126,7 @@ if uploadedFile:
     else:
         df = convertToCsv(circleData)
         st.subheader("Spheroid Measurements")
+        df = df.replace("None", "")
         st.dataframe(df, hide_index=True)
 
         processedImg = drawCircles(imgGray, circleData)
@@ -140,6 +141,7 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
