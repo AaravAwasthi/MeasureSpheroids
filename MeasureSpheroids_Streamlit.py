@@ -116,11 +116,13 @@ else:
 uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
 if uploadedFile:
     imgGray = loadImage(uploadedFile)
-    st.image(imgGray, caption="Original Image", channels="GRAY", use_container_width=True)
 
     blurred = cv2.GaussianBlur(imgGray, blurKernelSize, blurSigma)
     circleData = detectFullCircles(blurred, imgGray.shape, pixelsPerMicron)
-
+    
+    processedImg = drawCircles(imgGray, circleData)
+    st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
+    
     if not circleData:
         st.warning("No full circles detected.")
     else:
@@ -147,9 +149,6 @@ if uploadedFile:
         
         
 
-        processedImg = drawCircles(imgGray, circleData)
-        st.image(processedImg, caption="Processed Image with Detected Circles", use_container_width=True)
-
         # Downloadable CSV
         csvBuffer = BytesIO()
         df.to_csv(csvBuffer, index=False)
@@ -159,6 +158,7 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
 
 
