@@ -108,7 +108,7 @@ pixelsPerMicron_input = st.text_input(
     placeholder="e.g. 0.4304", 
     help="How many pixels represent 1 micron. This is used to convert pixel measurements to real-world units."
 )
-if pixelsPerMicron_input
+if pixelsPerMicron_input:
     pixelsPerMicron = float(pixelsPerMicron_input)
 uploadedFile = st.file_uploader("Upload a grayscale image (.jpg, .png)", type=["jpg", "jpeg", "png"])
 else:
@@ -140,4 +140,5 @@ if uploadedFile:
         # Downloadable image
         imgBuffer = convertCv2ImageToDownloadable(processedImg)
         st.download_button("Download Image", data=imgBuffer, file_name="circlesDetected.png", mime="image/png")
+
 
